@@ -1,7 +1,7 @@
 import path from 'path'
 import webpack from 'webpack'
 import validate from 'webpack-validator'
-import merge from 'webpack-mere'
+import merge from 'webpack-merge'
 import CleanPlugin from 'clean-webpack-plugin'
 
 import pkg from './package.json'
@@ -19,17 +19,9 @@ const ENV = {
 	port: process.env.PORT || 8000
 };
 
-
-
-process.env.BABEL_ENV = TARGET;
-
-const common = {
+const config = {
 	entry: {
 		app: PATHS.app
-	},
-
-	resolve: {
-		extensions: ['.js', '.jsx']
 	},
 
 	output: {
@@ -37,93 +29,19 @@ const common = {
 		filename: '[name].js'
 	},
 
+	resolve: {
+		extensions: ['.js', '.jsx']
+	},
+
 	module: {
 		loaders: [
 			{
-				test: /\.jsx?$/,
-				loaders: ['babel-loader?cacheDirectory'],
-				include: PATHS.app,
-				query: {
-					"presets": ["react", "stage-2"]
-				}
+				test: /\.(js|jsx)$/,
+				loaders: ['babel-loader?cacheDirectory']
 			}
 		]
-	},
-
-	plugins: [
-		new webpack.optimize.OccurenceOrderPlugin(),
-		new webpack.HotModuleReplacementPlugin(),
-		new webpack.NoErrorsPlugin()
-	]
-}
-
-switch(TARGET) {
-	case "build":
-	case "stats":
-		config = merge(
-			common,
-			{
-				devtool: 'source-map',
-
-				entry: {
-					vendor: Object.keys(pkg.dependencies).filter((v) => {
-						return v !== 'alt-utils';
-					})
-				},
-
-				output: {
-					path: `${PATHS.dist}/vendor`,
-					filename: '[name].[chunkhash].js',
-					chunkFilename: '[chunkhash].js'
-				},
-
-				plugins: [
-					new CleanPlugin([PATHS.dist]),
-					new webpack.optimize.CommonsChunkPlugin({
-						names: ['vendor', 'manifest']
-					}),
-
-					new webpack.DefinePlugin({
-						'process.env.NODE_ENV': 'production'
-					}),
-
-					new webpack.optimize.UglifyJsPlugin({
-						compress: {
-							warnings: false
-						}
-					})
-				]
-			}
-		);
-
-		break;
-
-	case 'test':
-	case 'test:tdd':
-		config = merge(
-			common,
-
-			{
-				devtool: 'inline-source-map'
-			}
-		);
-
-		break;
-
-	default:
-		config = merge(
-			common,
-
-			{
-				devtool: 'eval-source-map',
-				entry: {
-					'webpack-hot-middleware/client?reload=true'
-				}
-
-
-			}
-		);
-}
+	}
+};
 
 module.exports = validate(config, {
 	quiet: true

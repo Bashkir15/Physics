@@ -14,33 +14,11 @@ const port = isDeveloping ? 3000 : process.env.PORT;
 module.exports = () => {
 	const app = express();
 
-	if (isDeveloping) {
-		const compiler = webpack(config);
-		const middleware = webpackMiddleware(compiler, {
-			publicPath: config.output.publicPath,
-			contentBase: 'app',
-			stats: {
-				colors: true,
-				hash: false,
-				timings: true,
-				chunks: false,
-				chunkModules: false,
-				modules: false
-			}
-		});
 
-		app.use(middleware);
-		app.use(webpackHotMiddleware(compiler));
 
-		app.get('*', (req, res) => {
-			res.write(middleware.fileSystem.readFileSync(path.join(__dirname, '../app/index.html')));
-			res.end();
-		});
-	} else {
-		app.get('*', (req, res) => {
-			res.sendFile(path.join(__dirname, '../app/index.html'));
-		});
-	}
+	app.get('/', (req, res) => {
+		res.sendFile(path.join(__dirname, '../app/index.html'));
+	});
 
 	app.use(morgan('dev'));
 	app.use(bodyParser.json());
@@ -57,5 +35,6 @@ module.exports = () => {
 	app.use(express.static(path.join(__dirname, '../dist')));
 	app.use(express.static(path.join(__dirname, '../node_modules')));
 
+	return app
 }
 
